@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>易疲劳体质恢复计划</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-dark: #1D4ED8;
+      --purple: #7C3AED;
+      --purple-light: #8B5CF6;
+      --green: #10B981;
+      --green-light: #34D399;
+      --amber: #F59E0B;
+      --red: #EF4444;
+
+      --bg: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-muted: #F1F5F9;
+      --border: #E2E8F0;
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.12);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0F172A;
+      --bg-card: #1E293B;
+      --bg-muted: #1E293B;
+      --border: #334155;
+      --text-primary: #F1F5F9;
+      --text-secondary: #CBD5E1;
+      --text-muted: #64748B;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans SC', 'PingFang SC', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.7;
+      transition: background 0.4s, color 0.4s;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ===== Utility ===== */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section { padding: 80px 0; }
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .section-sub {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 48px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== Top Nav ===== */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(248,250,252,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    [data-theme="dark"] .nav {
+      background: rgba(15,23,42,0.85);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-logo span { font-size: 20px; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .sync-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .sync-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+    .sync-indicator.synced { color: var(--green); border-color: rgba(16,185,129,0.3); }
+    .sync-indicator.synced .sync-dot { background: var(--green); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+    .sync-indicator.syncing { color: var(--amber); border-color: rgba(245,158,11,0.3); }
+    .sync-indicator.syncing .sync-dot { background: var(--amber); animation: pulse-slow 1s infinite; }
+    .sync-indicator.offline { color: var(--text-muted); }
+    .sync-indicator.offline .sync-dot { background: var(--text-muted); }
+    .theme-toggle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: var(--transition);
+      color: var(--text-secondary);
+    }
+    .theme-toggle:hover {
+      background: var(--bg-muted);
+      color: var(--primary);
+    }
+
+    /* ===== Firebase Config Section ===== */
+    .firebase-config-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      margin-top: 48px;
+    }
+    .firebase-config-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .firebase-config-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .firebase-config-header p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .config-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .config-status-badge.connected {
+      background: rgba(16,185,129,0.1);
+      color: var(--green);
+    }
+    .config-status-badge.not-configured {
+      background: rgba(245,158,11,0.1);
+      color: var(--amber);
+    }
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .config-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .config-field input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      transition: var(--transition);
+    }
+    .config-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .config-field input::placeholder {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .config-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .config-save-btn {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .config-save-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+    .config-clear-btn {
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .config-clear-btn:hover { background: rgba(239,68,68,0.08); color: var(--red); border-color: rgba(239,68,68,0.3); }
+    .config-hint {
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(37,99,235,0.06);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .config-hint strong { color: var(--primary); }
+    .config-last-sync {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    .config-success {
+      padding: 10px 16px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-sm);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 600;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .last-sync-info { font-size: 12px; color: var(--text-muted); }
+
+    /* ===== Hero Section ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 60px;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-bg-gradient {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37,99,235,0.12) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 50% at 80% 80%, rgba(124,58,237,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse 40% 40% at 10% 60%, rgba(16,185,129,0.07) 0%, transparent 50%);
+    }
+    .hero-orbs {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: orb-float 8s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: var(--primary);
+      top: -100px; right: -100px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: var(--purple);
+      bottom: -50px; left: -50px;
+      animation-delay: -3s;
+    }
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: var(--green);
+      top: 40%; left: 40%;
+      animation-delay: -6s;
+    }
+    @keyframes orb-float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(20px, -30px) scale(1.05); }
+      66% { transform: translate(-15px, 20px) scale(0.95); }
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+    }
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(37,99,235,0.1);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 100px;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero-title {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+    .hero-desc {
+      font-size: 17px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+      max-width: 540px;
+      line-height: 1.8;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-bottom: 44px;
+    }
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .hero-stat-num {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(37,99,235,0.45);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-muted);
+      transform: translateY(-2px);
+    }
+    .hero-image {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      opacity: 0.9;
+    }
+    .hero-card-float {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+      animation: float-y 4s ease-in-out infinite;
+    }
+    .hero-card-float:nth-child(2) { animation-delay: -1.5s; transform: translateX(20px); }
+    .hero-card-float:nth-child(3) { animation-delay: -3s; }
+    @keyframes float-y {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .float-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .float-text { flex: 1; }
+    .float-text strong { font-size: 14px; font-weight: 600; display: block; line-height: 1.3; }
+    .float-text span { font-size: 12px; color: var(--text-secondary); }
+
+    /* ===== Problems Section ===== */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .problem-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: default;
+    }
+    .problem-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--purple));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .problem-card:hover::before { transform: scaleX(1); }
+    .problem-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: rgba(37,99,235,0.2);
+    }
+    .problem-num {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .problem-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+    .problem-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .problem-tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 3px 10px;
+      background: rgba(37,99,235,0.08);
+      color: var(--primary);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ===== Schedule Section ===== */
+    .schedule-bg {
+      background: linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04));
+      border-radius: var(--radius-xl);
+      padding: 40px;
+    }
+    .timeline {
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--purple), var(--green));
+      opacity: 0.3;
+      border-radius: 1px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+    }
+    .timeline-time {
+      width: 58px;
+      flex-shrink: 0;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding-top: 12px;
+    }
+    .timeline-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      margin-top: 8px;
+      position: relative;
+      z-index: 1;
+      border: 2px solid var(--bg);
+    }
+    .timeline-content {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .timeline-content:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow-md);
+    }
+    .timeline-label {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .timeline-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .timeline-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: var(--bg-muted);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Goals Section ===== */
+    .goals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .goal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .goal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    .goal-card::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; right: -40px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      opacity: 0.08;
+    }
+    .goal-card-1::after { background: var(--primary); }
+    .goal-card-2::after { background: var(--purple); }
+    .goal-card-3::after { background: var(--green); }
+    .goal-phase {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .goal-week {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .goal-list { display: flex; flex-direction: column; gap: 10px; }
+    .goal-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .goal-icon {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .goal-progress {
+      margin-top: 24px;
+      height: 5px;
+      background: var(--bg-muted);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .goal-progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease;
+    }
+    .goal-progress-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ===== Solutions Section ===== */
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .solution-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .solution-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .solution-num-bg {
+      position: absolute;
+      top: -10px; right: -10px;
+      font-size: 80px;
+      font-weight: 900;
+      opacity: 0.04;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .solution-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .solution-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .solution-title { font-size: 16px; font-weight: 600; line-height: 1.4; }
+    .solution-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .solution-list { display: flex; flex-direction: column; gap: 8px; }
+    .solution-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .solution-bullet {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ===== Check-in Section ===== */
+    .checkin-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+    .checkin-main {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+    }
+    .checkin-date {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .checkin-date-text h3 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .checkin-date-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .checkin-progress-ring {
+      position: relative;
+      width: 64px; height: 64px;
+    }
+    .ring-svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: var(--border); stroke-width: 4; }
+    .ring-fill {
+      fill: none;
+      stroke: url(#ringGrad);
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s ease;
+    }
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .checkin-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .checkin-task {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .checkin-task:hover { background: var(--bg-muted); }
+    .checkin-task.done {
+      background: rgba(16,185,129,0.06);
+      border-color: rgba(16,185,129,0.25);
+    }
+    .task-checkbox {
+      width: 24px; height: 24px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: var(--transition);
+      font-size: 13px;
+    }
+    .checkin-task.done .task-checkbox {
+      background: var(--green);
+      border-color: var(--green);
+      color: white;
+    }
+    .task-info { flex: 1; }
+    .task-name {
+      font-size: 14px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .checkin-task.done .task-name {
+      color: var(--text-secondary);
+      text-decoration: line-through;
+    }
+    .task-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .task-emoji { font-size: 20px; }
+    .checkin-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .streak-card {
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      color: white;
+      text-align: center;
+    }
+    .streak-num {
+      font-size: 56px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .streak-label { font-size: 14px; opacity: 0.85; }
+    .streak-sub { font-size: 12px; opacity: 0.65; margin-top: 4px; }
+    .weekly-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+    .weekly-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+    .weekly-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 80px;
+    }
+    .weekly-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      height: 100%;
+    }
+    .weekly-bar-track {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-muted);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .weekly-bar-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      border-radius: 4px;
+      background: linear-gradient(to top, var(--primary), var(--purple-light));
+      transition: height 1s ease;
+    }
+    .weekly-bar-day {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .tips-card {
+      background: rgba(16,185,129,0.06);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+    .tips-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tips-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .footer-quote {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+
+    /* ===== Animations ===== */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .pulse { animation: pulse-slow 2s ease-in-out infinite; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .problems-grid { grid-template-columns: repeat(2, 1fr); }
+      .goals-grid { grid-template-columns: 1fr; }
+      .solutions-grid { grid-template-columns: 1fr; }
+      .checkin-wrapper { grid-template-columns: 1fr; }
+      .hero-image { display: none; }
+      .timeline::before { left: 60px; }
+    }
+    @media (max-width: 600px) {
+      .problems-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .schedule-bg { padding: 20px; }
+      .timeline-time { width: 48px; font-size: 11px; }
+      .section { padding: 60px 0; }
+      .config-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="nav-logo">
+        <span>🌿</span>
+        <span>易疲劳恢复计划</span>
+      </div>
+      <div class="nav-links">
+        <a href="#problems">问题诊断</a>
+        <a href="#schedule">每日作息</a>
+        <a href="#goals">阶段目标</a>
+        <a href="#solutions">解决方案</a>
+        <a href="#checkin">每日打卡</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sync-indicator offline" id="syncIndicator" onclick="openFirebaseConfig()" title="点击设置云同步">
+          <div class="sync-dot"></div>
+          <span id="syncText">未连接</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">☀️</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-bg-gradient"></div>
+      <div class="hero-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+    </div>
+    <div class="container" style="width:100%; position:relative;">
+      <div class="hero-content">
+        <div class="hero-label">🎯 &nbsp;个人恢复计划 · 2026 版</div>
+        <h1 class="hero-title">
+          告别<span class="gradient-text">易疲劳</span><br/>
+          重启精力系统
+        </h1>
+        <p class="hero-desc">
+          你已确认 9 个易疲劳原因全部符合。<br/>
+          好消息是——这些都是习惯问题，不是身体坏了。<br/>
+          按这份计划，30 天可以明显感受到变化。
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat-num gradient-text">9</span>
+            <span class="hero-stat-label">问题全中</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num" style="color:var(--green)">8</span>
+            <span class="hero-stat-label">改善方法</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num" style="color:var(--purple)">30</span>
+            <span class="hero-stat-label">天见效果</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num" style="color:var(--amber)">12</span>
+            <span class="hero-stat-label">每日打卡项</span>
+          </div>
+        </div>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="document.getElementById('checkin').scrollIntoView({behavior:'smooth'})">
+            📋 开始今日打卡
+          </button>
+          <button class="btn-secondary" onclick="document.getElementById('schedule').scrollIntoView({behavior:'smooth'})">
+            ⏰ 查看作息计划
+          </button>
+        </div>
+      </div>
+
+      <!-- Floating cards -->
+      <div class="hero-image">
+        <div class="hero-card-float">
+          <div class="float-icon" style="background:rgba(16,185,129,0.12); color:var(--green)">💧</div>
+          <div class="float-text">
+            <strong>今日补水</strong>
+            <span>目标 1.5L 温热水</span>
+          </div>
+        </div>
+        <div class="hero-card-float">
+          <div class="float-icon" style="background:rgba(37,99,235,0.12); color:var(--primary)">🌙</div>
+          <div class="float-text">
+            <strong>晚上 11 点</strong>
+            <span>躺下放松，生物钟复位</span>
+          </div>
+        </div>
+        <div class="hero-card-float">
+          <div class="float-icon" style="background:rgba(124,58,237,0.12); color:var(--purple)">🥗</div>
+          <div class="float-text">
+            <strong>七分饱原则</strong>
+            <span>饭后慢走 10 分钟</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problems Section -->
+  <section class="section" id="problems">
+    <div class="container">
+      <div class="fade-in">
+        <div class="badge" style="background:rgba(239,68,68,0.1);color:var(--red);margin-bottom:12px">⚠️ 问题诊断</div>
+        <h2 class="section-title">你全中的 <span class="gradient-text">9 大</span> 易疲劳原因</h2>
+        <p class="section-sub">这些习惯正在悄悄消耗你的精力，每一个都在叠加损耗</p>
+      </div>
+      <div class="problems-grid">
+        <div class="problem-card fade-in">
+          <div class="problem-num">01</div>
+          <div class="problem-title">经常吃撑 + 久坐不动</div>
+          <div class="problem-desc">吃饱后血液集中消化，大脑供血不足，陷入"吃撑→代谢差→更累"死循环</div>
+          <span class="problem-tag">→ 七分饱 + 饭后走</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">02</div>
+          <div class="problem-title">长期熬大夜（常到 12 点后）</div>
+          <div class="problem-desc">蓝光抑制褪黑素，打乱肝脏 23:00-3:00 的排毒时间窗，第二天头痛眼干</div>
+          <span class="problem-tag">→ 11 点前躺下</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">03</div>
+          <div class="problem-title">常吃高油高盐高脂食物</div>
+          <div class="problem-desc">气血变黏稠，身体运行要消耗更多能量，像背着"包袱"走路，稍动就累</div>
+          <span class="problem-tag">→ 换杂粮饭</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">04</div>
+          <div class="problem-title">每天喝水太少（低于 500ml）</div>
+          <div class="problem-desc">缺水 2% 时红细胞携氧能力降 15%，容易掉发、膝盖响、便秘，渴了误当成饿</div>
+          <span class="problem-tag">→ 每天 1.5L</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">05</div>
+          <div class="problem-title">刷手机 / 短视频太多（超 8 小时）</div>
+          <div class="problem-desc">碎片信息透支多巴胺，每次切换 APP 注意力重启堪比爬 2 层楼，现实提不起劲</div>
+          <span class="problem-tag">→ 减少"耗电"习惯</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">06</div>
+          <div class="problem-title">白天嗜睡还放纵睡</div>
+          <div class="problem-desc">形成"白天睡→晚上熬→白天更困"恶性循环，身体总在"补觉"却没歇透</div>
+          <span class="problem-tag">→ 午睡 10-20 分钟</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">07</div>
+          <div class="problem-title">缺乏运动，能坐不站</div>
+          <div class="problem-desc">中枢神经缺少兴奋感，肌肉慢慢变弱，新陈代谢变慢，走几步都比别人累</div>
+          <span class="problem-tag">→ 偷懒式运动</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">08</div>
+          <div class="problem-title">压力大 + 焦虑思虑重</div>
+          <div class="problem-desc">皮质醇超标 3 倍以上，分解肌肉、降低免疫力，大脑被思虑占满，啥没做就身心俱疲</div>
+          <span class="problem-tag">→ 调整心态</span>
+        </div>
+        <div class="problem-card fade-in">
+          <div class="problem-num">09</div>
+          <div class="problem-title">上厕所总憋到最后一秒</div>
+          <div class="problem-desc">膀胱长期 300ml+ 充盈，压迫交感神经导致全身肌肉紧张，形成"慢性中毒"式倦怠</div>
+          <span class="problem-tag">→ 有意就去</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Schedule Section -->
+  <section class="section" id="schedule" style="background: var(--bg-muted);">
+    <div class="container">
+      <div class="fade-in">
+        <div class="badge" style="background:rgba(37,99,235,0.1);color:var(--primary);margin-bottom:12px">⏰ 每日作息</div>
+        <h2 class="section-title">精力恢复 <span class="gradient-text">时间表</span></h2>
+        <p class="section-sub">把 8 条改善方法落地到每天的具体时间点，做到不用想、自然就做</p>
+      </div>
+      <div class="schedule-bg fade-in">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-time">07:00</div>
+            <div class="timeline-dot" style="background:var(--amber);color:white">🌅</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--amber)">起床唤醒</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🤲 搓热双手捂眼 1 分钟</span>
+                <span class="timeline-action">💧 空腹喝 200ml 温水</span>
+                <span class="timeline-action">☀️ 拉开窗帘晒 5 分钟</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">07:30</div>
+            <div class="timeline-dot" style="background:var(--green);color:white">🥗</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--green)">早餐（七分饱）</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🌾 杂粮饭 / 全麦</span>
+                <span class="timeline-action">🥚 蛋白质必备</span>
+                <span class="timeline-action">❌ 不喝冰饮冷沙拉</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">07:50</div>
+            <div class="timeline-dot" style="background:var(--primary);color:white">🚶</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--primary)">饭后助消化</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🧱 靠墙站 5 分钟 OR 慢走 10 分钟</span>
+                <span class="timeline-action">🚫 不瘫在沙发</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">09:30</div>
+            <div class="timeline-dot" style="background:var(--purple);color:white">☀️</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--purple)">上午晒背</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🌞 背对太阳晒 15 分钟</span>
+                <span class="timeline-action">✨ 比喝咖啡提神更持久</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">每小时</div>
+            <div class="timeline-dot" style="background:var(--green);color:white">💧</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--green)">定时补水 + 微运动</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">💧 每小时喝 200ml 温水</span>
+                <span class="timeline-action">🦶 久坐后踮脚尖 20 次</span>
+                <span class="timeline-action">🚽 有便意立即去</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">12:30</div>
+            <div class="timeline-dot" style="background:var(--amber);color:white">😴</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--amber)">午间小憩（限时！）</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">⏱️ 只睡 10-20 分钟</span>
+                <span class="timeline-action">👂 闭眼揉耳朵</span>
+                <span class="timeline-action">🚫 不超过 20 分钟</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">15:00</div>
+            <div class="timeline-dot" style="background:var(--green);color:white">🫖</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--green)">下午补能</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🫚 泡生姜红枣水一杯</span>
+                <span class="timeline-action">🥜 几颗核桃 / 红枣垫肚子</span>
+                <span class="timeline-action">📵 远离碎片信息 30 分钟</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">19:00</div>
+            <div class="timeline-dot" style="background:var(--primary);color:white">🍚</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--primary)">晚餐（最重要：七分饱）</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🌾 杂粮饭替代白米饭</span>
+                <span class="timeline-action">🥦 蔬菜占一半</span>
+                <span class="timeline-action">🚶 饭后慢走 10 分钟</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">21:00</div>
+            <div class="timeline-dot" style="background:var(--purple);color:white">🧘</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--purple)">减少耗电，准备入眠</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">📵 手机调夜间模式</span>
+                <span class="timeline-action">🧠 不想复杂问题</span>
+                <span class="timeline-action">🌿 每周 1 小时做喜欢的事</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">22:00</div>
+            <div class="timeline-dot" style="background:var(--green);color:white">🛁</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--green)">睡前仪式感</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🦶 艾草+生姜煮水泡脚 10 分钟</span>
+                <span class="timeline-action">🥛 半杯温牛奶+蜂蜜</span>
+                <span class="timeline-action">📓 写 3 件今天做好的小事</span>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-time">23:00</div>
+            <div class="timeline-dot" style="background:var(--primary);color:white">🌙</div>
+            <div class="timeline-content">
+              <div class="timeline-label" style="color:var(--primary)">躺下，闭眼放松</div>
+              <div class="timeline-actions">
+                <span class="timeline-action">🫁 4-7-8 呼吸法：吸4→憋7→呼8</span>
+                <span class="timeline-action">✅ 哪怕睡不着也不刷手机</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Goals Section -->
+  <section class="section" id="goals">
+    <div class="container">
+      <div class="fade-in">
+        <div class="badge" style="background:rgba(124,58,237,0.1);color:var(--purple);margin-bottom:12px">📈 阶段目标</div>
+        <h2 class="section-title">三阶段 <span class="gradient-text">恢复路线</span></h2>
+        <p class="section-sub">不要逼自己一下子改完所有习惯，按阶段来，每一步都算数</p>
+      </div>
+      <div class="goals-grid">
+        <div class="goal-card goal-card-1 fade-in">
+          <div class="goal-phase" style="color:var(--primary)">第一阶段</div>
+          <div class="goal-week">第 1 周 · 适应期</div>
+          <div class="goal-list">
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(37,99,235,0.1);color:var(--primary)">✓</div>
+              <span>喝水从 500ml 增加到 1L，随手放杯子</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(37,99,235,0.1);color:var(--primary)">✓</div>
+              <span>每天比昨天早 15 分钟躺下</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(37,99,235,0.1);color:var(--primary)">✓</div>
+              <span>饭后不立即躺，哪怕站 5 分钟</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(37,99,235,0.1);color:var(--primary)">✓</div>
+              <span>白天午休控制在 20 分钟内</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(37,99,235,0.1);color:var(--primary)">✓</div>
+              <span>每天少刷 1 小时手机</span>
+            </div>
+          </div>
+          <div class="goal-progress">
+            <div class="goal-progress-bar" style="background:var(--primary);width:0%" id="goalBar1"></div>
+          </div>
+          <div class="goal-progress-label">目标：5 个习惯各做到 5 次</div>
+        </div>
+
+        <div class="goal-card goal-card-2 fade-in">
+          <div class="goal-phase" style="color:var(--purple)">第二阶段</div>
+          <div class="goal-week">第 2-4 周 · 巩固期</div>
+          <div class="goal-list">
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>每天稳定喝够 1.5L 温水</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>11 点前躺下，周末不超 12 点</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>白米饭换成杂粮饭（大米+黑米+红豆）</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>加入偷懒式运动：踮脚/深蹲/八段锦</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>睡前泡脚 + 写 3 件好事</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(124,58,237,0.1);color:var(--purple)">✓</div>
+              <span>上午晒背 15 分钟</span>
+            </div>
+          </div>
+          <div class="goal-progress">
+            <div class="goal-progress-bar" style="background:var(--purple);width:0%" id="goalBar2"></div>
+          </div>
+          <div class="goal-progress-label">目标：核心习惯连续打卡 14 天</div>
+        </div>
+
+        <div class="goal-card goal-card-3 fade-in">
+          <div class="goal-phase" style="color:var(--green)">第三阶段</div>
+          <div class="goal-week">第 5 周起 · 养成期</div>
+          <div class="goal-list">
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>精力明显提升，白天不再犯困</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>皮肤状态改善，眼干头痛减少</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>消化更好，饭后不再昏沉</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>焦虑感降低，情绪更稳定</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>尝试周末 16 小时轻断食</span>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon" style="background:rgba(16,185,129,0.1);color:var(--green)">✓</div>
+              <span>这些习惯已经变成"不做就不舒服"</span>
+            </div>
+          </div>
+          <div class="goal-progress">
+            <div class="goal-progress-bar" style="background:var(--green);width:0%" id="goalBar3"></div>
+          </div>
+          <div class="goal-progress-label">目标：连续打卡 30 天，精力全面升级</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Solutions Section -->
+  <section class="section" id="solutions" style="background: var(--bg-muted);">
+    <div class="container">
+      <div class="fade-in">
+        <div class="badge" style="background:rgba(16,185,129,0.1);color:var(--green);margin-bottom:12px">💡 解决方案</div>
+        <h2 class="section-title">8 条改善方法 <span class="gradient-text">完整版</span></h2>
+        <p class="section-sub">每一条都直接对应你的问题，不用剧烈改变，微调就有效</p>
+      </div>
+      <div class="solutions-grid">
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">1</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(16,185,129,0.1)">🥗</div>
+            <div>
+              <div class="solution-title">坚持「七分饱 + 饭后动一动」</div>
+              <div class="solution-sub">对应问题①③</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>每餐别吃撑，水果蔬菜、肉蛋均衡，让肠胃始终「轻装上阵」</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>饭后别马上瘫在沙发上，靠墙站 5 分钟或慢走 10 分钟，帮肠胃减负</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">2</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(37,99,235,0.1)">🌙</div>
+            <div>
+              <div class="solution-title">调整作息，跟着生物钟走</div>
+              <div class="solution-sub">对应问题②⑥</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>尽量 11 点前躺下，哪怕睡不着也闭眼放松，让肝脏、肾脏好好排毒修复</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>中午眯 10-20 分钟，下午保持精力还不影响晚上睡眠</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>周末别赖床到中午，比平时晚起 1 小时就够，生物钟稳了身体才听话</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">3</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(16,185,129,0.1)">💧</div>
+            <div>
+              <div class="solution-title">喝够温热水，加些小细节</div>
+              <div class="solution-sub">对应问题④</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>每天喝够 1.5L 温水，水里可以撒点黄芪、枸杞，或下午泡杯生姜红枣水</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>少喝冰饮、生冷沙拉（尤其早上），保护肠胃的「暖气」</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>手脚凉的话，煮汤时加两片生姜，慢慢就能暖起来</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">4</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(124,58,237,0.1)">🏃</div>
+            <div>
+              <div class="solution-title">运动不用剧烈，「偷懒式」也有效</div>
+              <div class="solution-sub">对应问题⑦</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>每天练 12 分钟八段锦，疏通经络</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>边看电视边敲大腿两侧（从胯骨到膝盖）促进气血</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>等水开时做 5 次深蹲；久坐后踮脚尖 20 次，促进血液循环</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>上午晒 15 分钟背，比喝咖啡提神更持久</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">5</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(239,68,68,0.1)">📵</div>
+            <div>
+              <div class="solution-title">减少「耗电」习惯，给身体省能量</div>
+              <div class="solution-sub">对应问题⑤⑨</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>晚上别刷手机，蓝光会让大脑误以为还在白天，影响睡眠</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>空调房里别穿露腰、露脚踝的衣服，避免寒气入侵</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>上厕所别憋尿，有便意及时去；睡前别想复杂问题</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">6</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(245,158,11,0.1)">⚡</div>
+            <div>
+              <div class="solution-title">给身体「补能」，偶尔「减负」</div>
+              <div class="solution-sub">对应问题③</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>把白米饭换成杂粮饭（大米+黑米+红豆），低GI让血糖稳定，不会吃完就犯困</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>随身带几颗核桃、红枣当零食，别让肚子饿过头</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>周末可以试试 16 小时轻断食（晚上 8 点到第二天中午不吃），让消化系统放个假</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>睡前喝半杯温牛奶（加勺蜂蜜），睡得更踏实</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">7</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(124,58,237,0.1)">🧘</div>
+            <div>
+              <div class="solution-title">调整心态，少被情绪「内耗」</div>
+              <div class="solution-sub">对应问题⑧</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>焦虑时试试「4-7-8 呼吸法」：4秒吸气→7秒憋气→8秒吐气，帮神经系统「重启」</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>每天睡前写 3 件当天做好的小事，慢慢积累信心</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>烦躁时整理房间，压力大就快走 10 分钟</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>每周留 1 小时做纯粹喜欢的事（听歌、涂鸦、发呆），别总被琐事占满</span></div>
+          </div>
+        </div>
+        <div class="solution-card fade-in">
+          <div class="solution-num-bg">8</div>
+          <div class="solution-header">
+            <div class="solution-icon" style="background:rgba(16,185,129,0.1)">🌿</div>
+            <div>
+              <div class="solution-title">日常小细节，悄悄护身体</div>
+              <div class="solution-sub">对应问题全部</div>
+            </div>
+          </div>
+          <div class="solution-list">
+            <div class="solution-item"><div class="solution-bullet"></div><span>早上起床后搓热双手捂眼睛 1 分钟，唤醒身体</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>午休时闭眼揉耳朵（耳朵上有很多放松穴位）</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>偶尔用左手刷牙、吃饭，换非惯用手做事，让身体更灵活</span></div>
+            <div class="solution-item"><div class="solution-bullet"></div><span>睡前用艾草+生姜煮水泡脚 10 分钟（水位到小腿肚），逼走体内的寒气</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Check-in Section -->
+  <section class="section" id="checkin">
+    <div class="container">
+      <div class="fade-in">
+        <div class="badge" style="background:rgba(16,185,129,0.1);color:var(--green);margin-bottom:12px">✅ 每日打卡</div>
+        <h2 class="section-title">今日 <span class="gradient-text">12 项打卡</span></h2>
+        <p class="section-sub">每天完成就勾选，数据自动保存在本地，不丢失</p>
+      </div>
+      <div class="checkin-wrapper fade-in">
+        <div class="checkin-main">
+          <div class="checkin-date">
+            <div class="checkin-date-text">
+              <h3 id="todayDate">今天</h3>
+              <p id="todayWeek">加载中...</p>
+            </div>
+            <div class="checkin-progress-ring">
+              <svg class="ring-svg" viewBox="0 0 64 64">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2563EB"/>
+                    <stop offset="100%" style="stop-color:#7C3AED"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="32" cy="32" r="28" />
+                <circle class="ring-fill" cx="32" cy="32" r="28"
+                  stroke-dasharray="175.93"
+                  stroke-dashoffset="175.93"
+                  id="ringFill" />
+              </svg>
+              <div class="ring-label" id="ringLabel">0%</div>
+            </div>
+          </div>
+          <div class="checkin-tasks" id="checkinTasks">
+            <!-- JS rendered -->
+          </div>
+        </div>
+        <div class="checkin-sidebar">
+          <div class="streak-card">
+            <div class="streak-num" id="streakNum">0</div>
+            <div class="streak-label">🔥 连续打卡天数</div>
+            <div class="streak-sub" id="streakSub">今天是第 1 天，加油！</div>
+          </div>
+          <div class="weekly-card">
+            <div class="weekly-title">📊 本周完成率</div>
+            <div class="weekly-bars" id="weeklyBars">
+              <!-- JS rendered -->
+            </div>
+          </div>
+          <div class="tips-card">
+            <div class="tips-title">🌿 今日提醒</div>
+            <div class="tips-text" id="dailyTip">正在加载...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firebase Cloud Sync Config -->
+      <div class="firebase-config-section" id="firebaseConfig">
+        <div class="firebase-config-header">
+          <div>
+            <h3>☁️ 云同步设置</h3>
+            <p>配置 Firebase 后，你的打卡记录可以在手机和电脑之间实时同步</p>
+          </div>
+          <div id="configStatusBadge" class="config-status-badge not-configured">
+            ⚠️ 未配置
+          </div>
+        </div>
+        <div class="config-grid">
+          <div class="config-field">
+            <label>API Key</label>
+            <input type="text" id="fbApiKey" placeholder="AIzaSy..." />
+          </div>
+          <div class="config-field">
+            <label>Auth Domain</label>
+            <input type="text" id="fbAuthDomain" placeholder="your-app.firebaseapp.com" />
+          </div>
+          <div class="config-field">
+            <label>Database URL</label>
+            <input type="text" id="fbDatabaseURL" placeholder="https://your-app-default-rtdb.firebaseio.com" />
+          </div>
+          <div class="config-field">
+            <label>App ID</label>
+            <input type="text" id="fbAppId" placeholder="1:123456789:web:abc123" />
+          </div>
+        </div>
+        <div class="config-actions">
+          <button class="config-save-btn" onclick="saveFirebaseConfig()">
+            <span>💾</span> 保存并连接
+          </button>
+          <button class="config-clear-btn" onclick="clearFirebaseConfig()">
+            🗑️ 清除配置
+          </button>
+          <div id="configMessage"></div>
+        </div>
+        <div class="config-hint" id="configHint">
+          <strong>📌 快速设置步骤：</strong><br/>
+          1. 访问 <a href="https://console.firebase.google.com" target="_blank" style="color:var(--primary)">console.firebase.google.com</a>，用 Google 账号登录<br/>
+          2. 点击「添加项目」→ 输入项目名称 → 关闭 Google Analytics（可选）→ 点击创建<br/>
+          3. 项目创建完成后，点击「构建」→ <strong>Realtime Database</strong> → 点击「创建数据库」<br/>
+          4. 选择「以测试模式启动」（学习阶段足够）→ 点击启用<br/>
+          5. 点击「⚙️ 项目设置」（齿轮图标）→ 滚动到「你的应用」→ 点击 Web 图标（</>）<br/>
+          6. 填写「Web 应用名称」→ 点击「注册应用」→ 复制生成的配置信息填入上方表单<br/>
+          <strong>⚠️ 安全建议：</strong>测试模式下任何人都可以读写数据，学习用足够。如需正式使用，可到 Realtime Database → 规则中设置读写权限。
+        </div>
+        <div class="last-sync-info" id="lastSyncInfo" style="display:none">
+          上次同步：<span id="lastSyncTime">-</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-quote">「不用天天盯着有没有变精神，今天比昨天多喝了一杯水，就已经在进步了。」</p>
+      <p>🌿 易疲劳体质恢复计划 · 慢慢调整，精力自然长出来</p>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Theme Toggle =====
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    }
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggle').textContent = theme === 'dark' ? '🌙' : '☀️';
+    })();
+
+    // ===== Date =====
+    const WEEKDAYS = ['周日','周一','周二','周三','周四','周五','周六'];
+    const now = new Date();
+    const dateStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    document.getElementById('todayDate').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+    document.getElementById('todayWeek').textContent = WEEKDAYS[now.getDay()] + ' · 点击任务即可打卡';
+
+    // ===== Checkin Tasks Config =====
+    const TASKS = [
+      { id: 'water', emoji: '💧', name: '喝够 1.5L 温水', tag: '对应问题④ · 每天' },
+      { id: 'sleep11', emoji: '🌙', name: '11 点前躺下', tag: '对应问题② · 每晚' },
+      { id: 'walkAfterMeal', emoji: '🚶', name: '饭后站立/慢走 10 分钟', tag: '对应问题① · 三餐后' },
+      { id: 'noOvereat', emoji: '🥗', name: '保持七分饱，不吃撑', tag: '对应问题①③ · 三餐' },
+      { id: 'sunback', emoji: '☀️', name: '上午晒背 15 分钟', tag: '对应问题⑦ · 上午' },
+      { id: 'nap20', emoji: '😴', name: '午睡控制在 20 分钟内', tag: '对应问题⑥ · 中午' },
+      { id: 'exercise', emoji: '🏃', name: '偷懒式运动（踮脚/深蹲/八段锦）', tag: '对应问题⑦ · 随时' },
+      { id: 'noPhoneNight', emoji: '📵', name: '晚上 9 点后减少刷手机', tag: '对应问题⑤ · 晚上' },
+      { id: 'noHold', emoji: '🚽', name: '有便意立即去，不憋', tag: '对应问题⑨ · 随时' },
+      { id: 'breathe', emoji: '🧘', name: '睡前 4-7-8 呼吸法', tag: '对应问题⑧ · 睡前' },
+      { id: 'footbath', emoji: '🦶', name: '睡前艾草生姜泡脚 10 分钟', tag: '对应问题全部 · 睡前' },
+      { id: 'journal', emoji: '📓', name: '写下今天 3 件做好的小事', tag: '对应问题⑧ · 睡前' },
+    ];
+
+    const TIPS = [
+      '身体特别吃「稳定」这一套，慢慢调整，不用一次全改。',
+      '今天比昨天多喝了一杯水，就已经在进步了。',
+      '明天比今天多晒 5 分钟背，精力会慢慢像小树苗一样冒芽。',
+      '不用逼自己跑 5 公里，等水开时做 5 次深蹲也算运动。',
+      '焦虑时试试 4-7-8 呼吸法，吸4→憋7→呼8，帮神经系统重启。',
+      '上厕所别憋，身体会感谢你的。',
+      '今晚 11 点前躺下，哪怕睡不着，闭眼放松也很值。',
+      '杂粮饭替换白米饭，低GI让下午不再犯困。',
+      '每周留 1 小时做纯粹喜欢的事，别总被琐事占满。',
+      '搓热双手捂眼 1 分钟，一个简单动作唤醒一整天。',
+    ];
+
+    // ===== Firebase State =====
+    let firebaseApp = null;
+    let db = null;
+    let fbConnected = false;
+    let isSyncing = false;
+    let fbUnsubscribe = null;
+    const FB_PATH = 'recovery_plan/checkins';
+
+    // ===== Firebase Config UI =====
+    function openFirebaseConfig() {
+      document.getElementById('firebaseConfig').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getFirebaseConfig() {
+      try {
+        const saved = localStorage.getItem('fb_config');
+        return saved ? JSON.parse(saved) : null;
+      } catch { return null; }
+    }
+
+    function saveFirebaseConfig() {
+      const apiKey = document.getElementById('fbApiKey').value.trim();
+      const authDomain = document.getElementById('fbAuthDomain').value.trim();
+      const databaseURL = document.getElementById('fbDatabaseURL').value.trim();
+      const appId = document.getElementById('fbAppId').value.trim();
+
+      if (!apiKey || !authDomain || !databaseURL || !appId) {
+        showConfigMessage('⚠️ 请填写所有字段', 'var(--amber)');
+        return;
+      }
+
+      const config = { apiKey, authDomain, databaseURL, appId };
+      localStorage.setItem('fb_config', JSON.stringify(config));
+      showConfigMessage('✅ 配置已保存，正在连接...', 'var(--green)');
+
+      // Re-init Firebase with new config
+      initFirebase(config, true);
+    }
+
+    function clearFirebaseConfig() {
+      localStorage.removeItem('fb_config');
+      document.getElementById('fbApiKey').value = '';
+      document.getElementById('fbAuthDomain').value = '';
+      document.getElementById('fbDatabaseURL').value = '';
+      document.getElementById('fbAppId').value = '';
+      document.getElementById('configStatusBadge').className = 'config-status-badge not-configured';
+      document.getElementById('configStatusBadge').innerHTML = '⚠️ 未配置';
+      document.getElementById('lastSyncInfo').style.display = 'none';
+      showConfigMessage('已清除 Firebase 配置', 'var(--text-muted)');
+      if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
+      if (firebaseApp) { firebaseApp.delete ? firebaseApp.delete() : null; }
+      firebaseApp = null; db = null; fbConnected = false;
+      updateSyncIndicator('offline', '未连接');
+    }
+
+    function showConfigMessage(msg, color) {
+      const el = document.getElementById('configMessage');
+      el.innerHTML = `<div class="config-success" style="color:${color}">${msg}</div>`;
+      setTimeout(() => { el.innerHTML = ''; }, 3000);
+    }
+
+    function loadConfigFields() {
+      const cfg = getFirebaseConfig();
+      if (cfg) {
+        document.getElementById('fbApiKey').value = cfg.apiKey || '';
+        document.getElementById('fbAuthDomain').value = cfg.authDomain || '';
+        document.getElementById('fbDatabaseURL').value = cfg.databaseURL || '';
+        document.getElementById('fbAppId').value = cfg.appId || '';
+      }
+    }
+
+    // ===== Firebase Init =====
+    function initFirebase(config, reconnect) {
+      try {
+        if (!firebase.apps.length || reconnect) {
+          if (firebase.apps.length) { firebase.apps.forEach(a => a.delete && a.delete()); }
+          firebaseApp = firebase.initializeApp(config);
+          db = firebase.database(firebaseApp);
+          fbConnected = true;
+
+          // Listen for real-time updates
+          const ref = db.ref(FB_PATH);
+          ref.on('value', function(snapshot) {
+            if (snapshot.exists()) {
+              const cloudData = snapshot.val();
+              // Merge: cloud data takes priority, keep local if cloud doesn't have it
+              const localData = getCheckinsLocal();
+              const merged = { ...localData, ...cloudData };
+              saveCheckinsLocal(merged);
+              // Update UI
+              renderCheckin();
+              updateRing();
+              updateStreak();
+              updateWeekly();
+              updateGoalBars();
+              // Update last sync time
+              const now = new Date();
+              const timeStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+              localStorage.setItem('fb_last_sync', timeStr);
+              document.getElementById('lastSyncTime').textContent = timeStr;
+              document.getElementById('lastSyncInfo').style.display = 'block';
+            }
+            updateSyncIndicator('synced', '已同步');
+            isSyncing = false;
+          }, function(error) {
+            console.warn('Firebase read error:', error);
+            updateSyncIndicator('offline', '读取失败');
+          });
+
+          // Handle disconnect: write local data when reconnecting
+          ref.onDisconnect().set(getCheckinsLocal());
+
+          // Update status badge
+          document.getElementById('configStatusBadge').className = 'config-status-badge connected';
+          document.getElementById('configStatusBadge').innerHTML = '✅ 已连接';
+          updateSyncIndicator('syncing', '同步中...');
+
+          // Push local data to cloud
+          pushToCloud();
+
+        }
+      } catch (e) {
+        console.error('Firebase init error:', e);
+        updateSyncIndicator('offline', '连接失败');
+        document.getElementById('configStatusBadge').className = 'config-status-badge not-configured';
+        document.getElementById('configStatusBadge').innerHTML = '❌ 连接失败';
+      }
+    }
+
+    function updateSyncIndicator(status, text) {
+      const indicator = document.getElementById('syncIndicator');
+      const textEl = document.getElementById('syncText');
+      indicator.className = 'sync-indicator ' + status;
+      textEl.textContent = text;
+    }
+
+    function pushToCloud() {
+      if (!db || !fbConnected) return;
+      updateSyncIndicator('syncing', '同步中...');
+      db.ref(FB_PATH).set(getCheckinsLocal()).then(() => {
+        updateSyncIndicator('synced', '已同步');
+        const now = new Date();
+        const timeStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+        localStorage.setItem('fb_last_sync', timeStr);
+        document.getElementById('lastSyncTime').textContent = timeStr;
+        document.getElementById('lastSyncInfo').style.display = 'block';
+      }).catch(() => {
+        updateSyncIndicator('offline', '同步失败');
+      });
+    }
+
+    // ===== LocalStorage Helpers =====
+    function getCheckinsLocal() {
+      try { return JSON.parse(localStorage.getItem('recovery_checkins') || '{}'); } catch { return {}; }
+    }
+    function saveCheckinsLocal(data) {
+      localStorage.setItem('recovery_checkins', JSON.stringify(data));
+    }
+    function getTodayData() {
+      const all = getCheckinsLocal();
+      return all[dateStr] || {};
+    }
+    function setTaskDone(taskId, done) {
+      const all = getCheckinsLocal();
+      if (!all[dateStr]) all[dateStr] = {};
+      all[dateStr][taskId] = done;
+      saveCheckinsLocal(all);
+      pushToCloud(); // Push to cloud whenever data changes
+    }
+    function getDoneCount() {
+      const today = getTodayData();
+      return TASKS.filter(t => today[t.id]).length;
+    }
+    function calcStreak() {
+      const all = getCheckinsLocal();
+      let streak = 0;
+      const d = new Date();
+      for (let i = 0; i < 60; i++) {
+        const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        const dayData = all[key] || {};
+        const done = TASKS.filter(t => dayData[t.id]).length;
+        if (done >= Math.ceil(TASKS.length * 0.5)) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else if (i === 0) {
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+    function getWeeklyData() {
+      const all = getCheckinsLocal();
+      const result = [];
+      const d = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const dd = new Date(d);
+        dd.setDate(d.getDate() - i);
+        const key = dd.getFullYear() + '-' + String(dd.getMonth()+1).padStart(2,'0') + '-' + String(dd.getDate()).padStart(2,'0');
+        const dayData = all[key] || {};
+        const done = TASKS.filter(t => dayData[t.id]).length;
+        result.push({ day: WEEKDAYS[dd.getDay()], pct: Math.round(done / TASKS.length * 100) });
+      }
+      return result;
+    }
+
+    // ===== Render Checkin =====
+    let todaySnapshot = {};
+
+    function renderCheckin() {
+      todaySnapshot = getTodayData();
+      const container = document.getElementById('checkinTasks');
+      container.innerHTML = '';
+      TASKS.forEach(task => {
+        const done = !!todaySnapshot[task.id];
+        const div = document.createElement('div');
+        div.className = 'checkin-task' + (done ? ' done' : '');
+        div.innerHTML = `
+          <div class="task-emoji">${task.emoji}</div>
+          <div class="task-info">
+            <div class="task-name">${task.name}</div>
+            <div class="task-tag">${task.tag}</div>
+          </div>
+          <div class="task-checkbox">${done ? '✓' : ''}</div>
+        `;
+        div.addEventListener('click', () => {
+          const newDone = !todaySnapshot[task.id];
+          todaySnapshot[task.id] = newDone;
+          setTaskDone(task.id, newDone);
+          div.className = 'checkin-task' + (newDone ? ' done' : '');
+          div.querySelector('.task-checkbox').textContent = newDone ? '✓' : '';
+          div.querySelector('.task-name').style.textDecoration = newDone ? 'line-through' : 'none';
+          div.querySelector('.task-name').style.color = newDone ? 'var(--text-secondary)' : '';
+          updateRing();
+          updateStreak();
+          updateWeekly();
+          updateGoalBars();
+        });
+        container.appendChild(div);
+      });
+    }
+
+    function updateRing() {
+      const done = TASKS.filter(t => todaySnapshot[t.id]).length;
+      const total = TASKS.length;
+      const pct = Math.round(done / total * 100);
+      const circumference = 175.93;
+      const offset = circumference * (1 - pct / 100);
+      document.getElementById('ringFill').style.strokeDashoffset = offset;
+      document.getElementById('ringLabel').textContent = pct + '%';
+    }
+
+    function updateStreak() {
+      const streak = calcStreak();
+      document.getElementById('streakNum').textContent = streak;
+      document.getElementById('streakSub').textContent =
+        streak === 0 ? '今天是第 1 天，加油！' :
+        streak < 7 ? `已坚持 ${streak} 天，继续！` :
+        streak < 30 ? `哇，${streak} 天连击！你在变强 🔥` :
+        `超级厉害！${streak} 天不间断 🏆`;
+    }
+
+    function updateWeekly() {
+      const weekly = getWeeklyData();
+      const container = document.getElementById('weeklyBars');
+      container.innerHTML = '';
+      weekly.forEach(({ day, pct }) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'weekly-bar-wrap';
+        wrap.innerHTML = `
+          <div class="weekly-bar-track">
+            <div class="weekly-bar-fill" style="height:${pct}%"></div>
+          </div>
+          <div class="weekly-bar-day">${day}</div>
+        `;
+        container.appendChild(wrap);
+      });
+    }
+
+    function updateGoalBars() {
+      const streak = calcStreak();
+      const bar1 = Math.min(100, Math.round(TASKS.filter(t=>todaySnapshot[t.id]).length / TASKS.length * 100));
+      const bar2 = Math.min(100, Math.round(streak / 14 * 100));
+      const bar3 = Math.min(100, Math.round(streak / 30 * 100));
+      document.getElementById('goalBar1').style.width = bar1 + '%';
+      document.getElementById('goalBar2').style.width = bar2 + '%';
+      document.getElementById('goalBar3').style.width = bar3 + '%';
+    }
+
+    function updateTip() {
+      const tipIdx = now.getDate() % TIPS.length;
+      document.getElementById('dailyTip').textContent = TIPS[tipIdx];
+    }
+
+    // ===== Scroll Fade-in =====
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ===== Init =====
+    loadConfigFields();
+    const savedConfig = getFirebaseConfig();
+    if (savedConfig) {
+      // Auto-connect if config exists
+      document.getElementById('configStatusBadge').className = 'config-status-badge connected';
+      document.getElementById('configStatusBadge').innerHTML = '🔄 连接中...';
+      updateSyncIndicator('syncing', '连接中...');
+      setTimeout(() => { initFirebase(savedConfig, false); }, 500);
+    }
+    renderCheckin();
+    updateRing();
+    updateStreak();
+    updateWeekly();
+    updateTip();
+    updateGoalBars();
+  </script>
+</body>
+</html>
