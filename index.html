@@ -286,6 +286,140 @@
     .signout-btn:hover { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); color: #FCA5A5; }
     .content-hidden { display: none !important; }
 
+    /* ===== Auth Setup Card (Firebase config on login page) ===== */
+    .auth-setup-card {
+      background: rgba(30,41,59,0.8);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 24px;
+      padding: 36px 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      animation: authIn 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .auth-setup-icon {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, var(--amber), #F97316);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+    }
+    .auth-setup-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+    }
+    .auth-setup-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .setup-field { text-align: left; }
+    .setup-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .setup-field input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      color: white;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s;
+    }
+    .setup-field input:focus {
+      outline: none;
+      border-color: var(--amber);
+      background: rgba(245,158,11,0.08);
+    }
+    .setup-field input::placeholder { color: rgba(255,255,255,0.25); font-size: 11px; }
+    .setup-save-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--amber), #F97316);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .setup-save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.4); }
+    .setup-save-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .setup-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .setup-hint {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(245,158,11,0.08);
+      border-radius: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      text-align: left;
+      line-height: 1.7;
+    }
+    .setup-hint strong { color: var(--amber); }
+    .setup-error {
+      color: #FCA5A5;
+      font-size: 13px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: rgba(239,68,68,0.12);
+      border-radius: 8px;
+      display: none;
+    }
+    .setup-error.show { display: block; }
+    .setup-success {
+      color: #6EE7B7;
+      font-size: 13px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: rgba(16,185,129,0.12);
+      border-radius: 8px;
+      display: none;
+    }
+    .setup-success.show { display: block; }
+    .setup-card-footer {
+      margin-top: 16px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+    .setup-card-footer a { color: var(--primary); text-decoration: none; }
+    .setup-card-footer a:hover { text-decoration: underline; }
+
     /* ===== Top Nav ===== */
     .nav {
       position: fixed;
@@ -1213,7 +1347,56 @@
 
   <!-- Auth Overlay -->
   <div class="auth-overlay" id="authOverlay">
-    <div class="auth-card" id="authCard">
+
+    <!-- 🔧 Firebase Setup Card (shown when Firebase is not configured) -->
+    <div class="auth-setup-card" id="setupCard">
+      <div class="auth-setup-icon">⚙️</div>
+      <h2 class="auth-setup-title">首次使用 · 云同步设置</h2>
+      <p class="auth-setup-desc">
+        请先填写 Firebase 配置信息，完成后即可登录<br/>
+        配置会保存在本地浏览器中
+      </p>
+
+      <div class="setup-grid">
+        <div class="setup-field">
+          <label>API Key</label>
+          <input type="text" id="setupApiKey" placeholder="AIzaSy..." />
+        </div>
+        <div class="setup-field">
+          <label>Auth Domain</label>
+          <input type="text" id="setupAuthDomain" placeholder="your-app.firebaseapp.com" />
+        </div>
+        <div class="setup-field">
+          <label>Database URL</label>
+          <input type="text" id="setupDatabaseURL" placeholder="https://your-app-default-rtdb.firebaseio.com" />
+        </div>
+        <div class="setup-field">
+          <label>App ID</label>
+          <input type="text" id="setupAppId" placeholder="1:123456789:web:abc123" />
+        </div>
+      </div>
+
+      <div id="setupError" class="setup-error"></div>
+      <div id="setupSuccess" class="setup-success"></div>
+
+      <button class="setup-save-btn" id="setupSaveBtn" onclick="saveSetupConfig()">
+        <span id="setupBtnText">💾 保存配置</span>
+      </button>
+
+      <div class="setup-hint">
+        <strong>📌 设置步骤：</strong><br/>
+        1. 打开 <a href="https://console.firebase.google.com" target="_blank" style="color:var(--amber)">console.firebase.google.com</a> → 添加项目 → 创建 Web 应用 → 复制配置信息<br/>
+        2. 项目设置 → Authentication → 启用「Google」和「电子邮件/密码」<br/>
+        3. 构建 → Realtime Database → 创建数据库（测试模式）
+      </div>
+
+      <div class="setup-card-footer">
+        配置保存在本地 · 随时可在页面底部修改
+      </div>
+    </div>
+
+    <!-- 🔐 Normal Auth Card (shown after Firebase is configured) -->
+    <div class="auth-card" id="authCard" style="display:none">
       <div class="auth-icon">🌿</div>
       <h2 class="auth-title">易疲劳恢复计划</h2>
       <p class="auth-desc">登录后即可开始每日打卡<br/>记录你的精力恢复之旅</p>
@@ -1250,6 +1433,24 @@
         登录即表示你同意我们的服务条款。<br/>
         你的数据将安全存储在 Firebase 平台。
       </p>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)">
+        <p style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px">Firebase 配置有误？</p>
+        <button onclick="clearFirebaseConfig()" style="
+          background:rgba(245,158,11,0.15);
+          border:1px solid rgba(245,158,11,0.3);
+          color:var(--amber);
+          padding:8px 20px;
+          border-radius:8px;
+          font-size:13px;
+          font-weight:600;
+          cursor:pointer;
+          transition:all 0.3s;
+          width:100%;
+        " onmouseover="this.style.background='rgba(245,158,11,0.25)'" onmouseout="this.style.background='rgba(245,158,11,0.15)'">
+          🔄 重新设置 Firebase
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2107,6 +2308,12 @@
       document.getElementById('userArea').style.display = 'none';
       document.getElementById('userAvatar').src = '';
       document.getElementById('userName').textContent = '';
+      // Ensure auth card is shown when logging out and already configured
+      const cfg = getFirebaseConfig();
+      if (cfg.apiKey && cfg.authDomain) {
+        document.getElementById('setupCard').style.display = 'none';
+        document.getElementById('authCard').style.display = 'block';
+      }
     }
 
     // ===== Firebase Helpers =====
@@ -2140,11 +2347,25 @@
     // ===== Auth State Listener =====
     (async function initAuth() {
       const cfg = getFirebaseConfig();
+
+      // Pre-fill setup form fields if config exists
+      if (cfg.apiKey) {
+        document.getElementById('setupApiKey').value = cfg.apiKey || '';
+        document.getElementById('setupAuthDomain').value = cfg.authDomain || '';
+        document.getElementById('setupDatabaseURL').value = cfg.databaseURL || '';
+        document.getElementById('setupAppId').value = cfg.appId || '';
+      }
+
       if (!cfg.apiKey || !cfg.authDomain) {
-        // Not configured yet - show login with error
-        showLogin();
+        // Firebase NOT configured → show setup card only
+        document.getElementById('setupCard').style.display = 'block';
+        document.getElementById('authCard').style.display = 'none';
         return;
       }
+
+      // Firebase configured → show auth card
+      document.getElementById('setupCard').style.display = 'none';
+      document.getElementById('authCard').style.display = 'block';
 
       try {
         if (!firebase.apps.length) {
@@ -2163,7 +2384,9 @@
           }
         });
       } catch (e) {
-        showLogin();
+        // Config exists but invalid → show setup card with error
+        document.getElementById('setupCard').style.display = 'block';
+        document.getElementById('authCard').style.display = 'none';
       }
     })();
 
@@ -2252,15 +2475,62 @@
       setTimeout(() => { location.reload(); }, 1500);
     }
 
+    // ===== Setup Card Config (login page) =====
+    function saveSetupConfig() {
+      const apiKey = document.getElementById('setupApiKey').value.trim();
+      const authDomain = document.getElementById('setupAuthDomain').value.trim();
+      const databaseURL = document.getElementById('setupDatabaseURL').value.trim();
+      const appId = document.getElementById('setupAppId').value.trim();
+
+      const errEl = document.getElementById('setupError');
+      const sucEl = document.getElementById('setupSuccess');
+      const btn = document.getElementById('setupSaveBtn');
+      const btnText = document.getElementById('setupBtnText');
+
+      errEl.className = 'setup-error';
+      sucEl.className = 'setup-success';
+
+      if (!apiKey || !authDomain || !databaseURL || !appId) {
+        errEl.textContent = '⚠️ 请填写全部 4 个字段';
+        errEl.className = 'setup-error show';
+        return;
+      }
+
+      // Save to localStorage
+      const config = { apiKey, authDomain, databaseURL, appId };
+      localStorage.setItem('fb_config', JSON.stringify(config));
+
+      // Also update bottom form fields
+      document.getElementById('fbApiKey').value = apiKey;
+      document.getElementById('fbAuthDomain').value = authDomain;
+      document.getElementById('fbDatabaseURL').value = databaseURL;
+      document.getElementById('fbAppId').value = appId;
+
+      // Show success then reload
+      btn.disabled = true;
+      btnText.innerHTML = '<div class="setup-spinner"></div> 保存中...';
+      sucEl.textContent = '✅ 配置已保存，正在重启...';
+      sucEl.className = 'setup-success show';
+
+      setTimeout(() => { location.reload(); }, 1500);
+    }
+
     function clearFirebaseConfig() {
       localStorage.removeItem('fb_config');
-      ['fbApiKey','fbAuthDomain','fbDatabaseURL','fbAppId'].forEach(id => {
-        document.getElementById(id).value = '';
+      ['fbApiKey','fbAuthDomain','fbDatabaseURL','fbAppId','setupApiKey','setupAuthDomain','setupDatabaseURL','setupAppId'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
       });
       document.getElementById('configStatusBadge').className = 'config-status-badge not-configured';
       document.getElementById('configStatusBadge').innerHTML = '⚠️ 未配置';
       document.getElementById('lastSyncInfo').style.display = 'none';
-      showConfigMessage('已清除配置', 'var(--text-muted)');
+
+      // Also clear any session errors
+      const errEl = document.getElementById('authError');
+      if (errEl) errEl.className = 'auth-error';
+
+      // Force reload: first clear storage, then navigate away and back to force fresh load
+      window.location.replace(window.location.pathname + '?t=' + Date.now());
     }
 
     function showConfigMessage(msg, color) {
