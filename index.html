@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <style>
     /* ===== CSS Variables ===== */
     :root {
@@ -126,6 +127,164 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* ===== Auth Overlay ===== */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 32px;
+      padding: 24px;
+    }
+    .auth-card {
+      background: rgba(30,41,59,0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      animation: authIn 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes authIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .auth-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 24px;
+      box-shadow: 0 8px 32px rgba(37,99,235,0.4);
+    }
+    .auth-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .auth-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 36px;
+      line-height: 1.7;
+    }
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      margin-bottom: 12px;
+    }
+    .auth-btn-google {
+      background: white;
+      color: #1E293B;
+    }
+    .auth-btn-google:hover { background: #F1F5F9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,255,255,0.2); }
+    .auth-btn-email {
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .auth-btn-email:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+    .auth-or { color: rgba(255,255,255,0.3); font-size: 13px; margin: 8px 0; }
+    .auth-input-group { margin-bottom: 12px; text-align: left; }
+    .auth-input-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); margin-bottom: 6px; letter-spacing: 0.5px; }
+    .auth-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      color: white;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .auth-input:focus { outline: none; border-color: var(--primary); background: rgba(37,99,235,0.1); }
+    .auth-input::placeholder { color: rgba(255,255,255,0.3); }
+    .auth-error {
+      color: #FCA5A5;
+      font-size: 13px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      background: rgba(239,68,68,0.15);
+      border-radius: 8px;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-toggle { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 16px; }
+    .auth-toggle button {
+      background: none; border: none; color: var(--primary); cursor: pointer;
+      font-size: 13px; font-weight: 600; padding: 0;
+    }
+    .auth-toggle button:hover { text-decoration: underline; }
+    .auth-spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #1E293B;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .auth-loading { opacity: 0.7; pointer-events: none; }
+    .auth-terms {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    .auth-user {
+      position: absolute;
+      top: 10px; right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10001;
+    }
+    .auth-user-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    .auth-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+    }
+    .signout-btn {
+      padding: 7px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .signout-btn:hover { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); color: #FCA5A5; }
+    .content-hidden { display: none !important; }
 
     /* ===== Top Nav ===== */
     .nav {
@@ -1052,6 +1211,48 @@
 </head>
 <body>
 
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card" id="authCard">
+      <div class="auth-icon">🌿</div>
+      <h2 class="auth-title">易疲劳恢复计划</h2>
+      <p class="auth-desc">登录后即可开始每日打卡<br/>记录你的精力恢复之旅</p>
+
+      <div id="authError" class="auth-error"></div>
+
+      <!-- Google Sign In -->
+      <button class="auth-btn auth-btn-google" id="googleBtn" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+        使用 Google 账号登录
+      </button>
+
+      <div class="auth-or">或者</div>
+
+      <!-- Email Form -->
+      <div class="auth-input-group">
+        <label>邮箱地址</label>
+        <input type="email" class="auth-input" id="authEmail" placeholder="your@email.com" />
+      </div>
+      <div class="auth-input-group">
+        <label>密码</label>
+        <input type="password" class="auth-input" id="authPassword" placeholder="至少 6 位" />
+      </div>
+
+      <button class="auth-btn auth-btn-email" id="emailBtn" onclick="handleEmailAuth()">
+        <span id="emailBtnText">使用邮箱登录</span>
+      </button>
+
+      <div class="auth-toggle" id="authToggle">
+        没有账号？<button onclick="toggleEmailMode()">立即注册</button>
+      </div>
+
+      <p class="auth-terms">
+        登录即表示你同意我们的服务条款。<br/>
+        你的数据将安全存储在 Firebase 平台。
+      </p>
+    </div>
+  </div>
+
   <!-- Navigation -->
   <nav class="nav">
     <div class="container nav-inner">
@@ -1070,6 +1271,11 @@
         <div class="sync-indicator offline" id="syncIndicator" onclick="openFirebaseConfig()" title="点击设置云同步">
           <div class="sync-dot"></div>
           <span id="syncText">未连接</span>
+        </div>
+        <div id="userArea" style="display:none;align-items:center;gap:8px">
+          <img id="userAvatar" class="auth-user-avatar" src="" alt="avatar" />
+          <span id="userName" class="auth-user-name"></span>
+          <button class="signout-btn" onclick="signOut()">退出</button>
         </div>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">☀️</button>
       </div>
@@ -1710,11 +1916,13 @@
           <strong>📌 快速设置步骤：</strong><br/>
           1. 访问 <a href="https://console.firebase.google.com" target="_blank" style="color:var(--primary)">console.firebase.google.com</a>，用 Google 账号登录<br/>
           2. 点击「添加项目」→ 输入项目名称 → 关闭 Google Analytics（可选）→ 点击创建<br/>
-          3. 项目创建完成后，点击「构建」→ <strong>Realtime Database</strong> → 点击「创建数据库」<br/>
-          4. 选择「以测试模式启动」（学习阶段足够）→ 点击启用<br/>
-          5. 点击「⚙️ 项目设置」（齿轮图标）→ 滚动到「你的应用」→ 点击 Web 图标（</>）<br/>
-          6. 填写「Web 应用名称」→ 点击「注册应用」→ 复制生成的配置信息填入上方表单<br/>
-          <strong>⚠️ 安全建议：</strong>测试模式下任何人都可以读写数据，学习用足够。如需正式使用，可到 Realtime Database → 规则中设置读写权限。
+          3. 项目创建完成后，点击「⚙️ 项目设置」→ 滚动到「你的应用」→ 点击 Web 图标（</>）<br/>
+          4. 填写「Web 应用名称」→ 点击「注册应用」→ 复制 <strong>apiKey / authDomain / databaseURL / appId</strong> 填入上方表单<br/>
+          5. 返回控制台，点击「构建」→ <strong>Authentication</strong> → 点击「开始使用」<br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;→ 启用「<strong>Google</strong>」（一键登录）→ 选择你的 Google 邮箱 → 保存<br/>
+          &nbsp;&nbsp;&nbsp;&nbsp;→ 启用「<strong>电子邮件/密码</strong>」（邮箱登录）→ 保存<br/>
+          6. 点击「构建」→ <strong>Realtime Database</strong> → 点击「创建数据库」→ 选择「以测试模式启动」→ 启用<br/>
+          <strong>⚠️ 安全说明：</strong>测试模式下请勿存入敏感数据。正式使用时可在 Database → 规则中限制为：<code>auth.uid != null</code> 确保只有登录用户才能读写自己的数据。
         </div>
         <div class="last-sync-info" id="lastSyncInfo" style="display:none">
           上次同步：<span id="lastSyncTime">-</span>
@@ -1732,6 +1940,12 @@
   </footer>
 
   <script>
+    // ===== Global State =====
+    let currentUser = null;
+    let currentUserId = null;
+    let isRegisterMode = false;
+    let firebaseInitialized = false;
+
     // ===== Theme Toggle =====
     function toggleTheme() {
       const html = document.documentElement;
@@ -1784,24 +1998,239 @@
       '搓热双手捂眼 1 分钟，一个简单动作唤醒一整天。',
     ];
 
-    // ===== Firebase State =====
-    let firebaseApp = null;
+    // ===== Auth Functions =====
+    function toggleEmailMode() {
+      isRegisterMode = !isRegisterMode;
+      const btn = document.getElementById('emailBtn');
+      const toggle = document.getElementById('authToggle');
+      const title = isRegisterMode ? '创建账号' : '登录';
+      btn.innerHTML = `<span id="emailBtnText">${isRegisterMode ? '注册账号' : '使用邮箱登录'}</span>`;
+      toggle.innerHTML = isRegisterMode
+        ? '已有账号？<button onclick="toggleEmailMode()">立即登录</button>'
+        : '没有账号？<button onclick="toggleEmailMode()">立即注册</button>';
+      hideError();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg;
+      el.className = 'auth-error show';
+    }
+    function hideError() {
+      document.getElementById('authError').className = 'auth-error';
+    }
+
+    function setLoading(btn, loading) {
+      if (loading) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="auth-spinner"></div>`;
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = isRegisterMode ? '注册账号' : '使用邮箱登录';
+      }
+    }
+
+    async function signInWithGoogle() {
+      const btn = document.getElementById('googleBtn');
+      setLoading(btn, true);
+      try {
+        await ensureFirebaseAuth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await firebase.auth().signInWithPopup(provider);
+      } catch (e) {
+        if (e.code !== 'popup_closed_by_user') {
+          showError('登录失败：' + (e.message || '请重试'));
+        }
+      }
+      setLoading(btn, false);
+    }
+
+    async function handleEmailAuth() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const btn = document.getElementById('emailBtn');
+
+      if (!email || !password) {
+        showError('请填写邮箱和密码'); return;
+      }
+      if (password.length < 6) {
+        showError('密码至少需要 6 位'); return;
+      }
+
+      setLoading(btn, true);
+      hideError();
+      try {
+        await ensureFirebaseAuth();
+        if (isRegisterMode) {
+          const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        } else {
+          const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        }
+      } catch (e) {
+        const msgs = {
+          'auth/user-not-found': '账号不存在，请先注册',
+          'auth/wrong-password': '密码错误',
+          'auth/email-already-in-use': '该邮箱已被注册',
+          'auth/weak-password': '密码强度太弱，至少 6 位',
+          'auth/invalid-email': '邮箱格式不正确',
+          'auth/popup-blocked': '弹窗被浏览器拦截，请允许弹窗后重试',
+          'auth/network-request-failed': '网络连接失败，请检查网络',
+        };
+        showError(msgs[e.code] || e.message || '操作失败，请重试');
+      }
+      setLoading(btn, false);
+    }
+
+    async function signOut() {
+      try {
+        await firebase.auth().signOut();
+      } catch (e) {
+        console.warn('Sign out error:', e);
+      }
+    }
+
+    function showApp(user) {
+      currentUser = user;
+      document.getElementById('authOverlay').classList.add('content-hidden');
+      document.getElementById('userArea').style.display = 'flex';
+      document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+      const avatar = user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.displayName || user.email)}`;
+      document.getElementById('userAvatar').src = avatar;
+
+      // Init Firebase data for this user
+      initUserData();
+    }
+
+    function showLogin() {
+      document.getElementById('authOverlay').classList.remove('content-hidden');
+      document.getElementById('userArea').style.display = 'none';
+      document.getElementById('userAvatar').src = '';
+      document.getElementById('userName').textContent = '';
+    }
+
+    // ===== Firebase Helpers =====
+    function getFirebaseConfig() {
+      try { return JSON.parse(localStorage.getItem('fb_config') || '{}'); } catch { return {}; }
+    }
+
+    function ensureFirebaseAuth() {
+      return new Promise((resolve, reject) => {
+        if (firebaseInitialized) { resolve(); return; }
+        const cfg = getFirebaseConfig();
+        if (!cfg.apiKey || !cfg.authDomain) {
+          // Show setup guide if not configured
+          showError('请先在页面底部配置 Firebase 连接信息并保存');
+          reject(new Error('Firebase not configured'));
+          return;
+        }
+        try {
+          if (!firebase.apps.length) {
+            firebaseApp = firebase.initializeApp(cfg);
+          }
+          firebase.auth().onAuthStateChanged(() => {}); // ensure auth ready
+          firebaseInitialized = true;
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    // ===== Auth State Listener =====
+    (async function initAuth() {
+      const cfg = getFirebaseConfig();
+      if (!cfg.apiKey || !cfg.authDomain) {
+        // Not configured yet - show login with error
+        showLogin();
+        return;
+      }
+
+      try {
+        if (!firebase.apps.length) {
+          firebaseApp = firebase.initializeApp(cfg);
+        }
+        const auth = firebase.auth();
+        firebaseInitialized = true;
+
+        auth.onAuthStateChanged(async (user) => {
+          if (user) {
+            currentUserId = user.uid;
+            showApp(user);
+          } else {
+            currentUserId = null;
+            showLogin();
+          }
+        });
+      } catch (e) {
+        showLogin();
+      }
+    })();
+
+    // ===== Firebase Data Functions (per-user) =====
     let db = null;
-    let fbConnected = false;
-    let isSyncing = false;
     let fbUnsubscribe = null;
-    const FB_PATH = 'recovery_plan/checkins';
+
+    function initUserData() {
+      const cfg = getFirebaseConfig();
+      if (!cfg.apiKey || !cfg.authDomain || !currentUserId) return;
+
+      try {
+        if (!firebase.apps.length) firebaseApp = firebase.initializeApp(cfg);
+        db = firebase.database(firebaseApp);
+
+        const ref = db.ref('users/' + currentUserId + '/checkins');
+
+        // Listen for real-time cloud data
+        if (fbUnsubscribe) fbUnsubscribe();
+        fbUnsubscribe = ref.on('value', function(snapshot) {
+          const cloudData = snapshot.exists() ? snapshot.val() : {};
+          const localData = getCheckinsLocal();
+          // Merge: cloud data takes priority (it has the latest)
+          const merged = { ...localData, ...cloudData };
+          saveCheckinsLocal(merged);
+          renderCheckin();
+          updateRing();
+          updateStreak();
+          updateWeekly();
+          updateGoalBars();
+          updateSyncIndicator('synced', '已同步');
+          const now2 = new Date();
+          const t = now2.getFullYear()+'-'+String(now2.getMonth()+1).padStart(2,'0')+'-'+String(now2.getDate()).padStart(2,'0')+' '+String(now2.getHours()).padStart(2,'0')+':'+String(now2.getMinutes()).padStart(2,'0');
+          localStorage.setItem('fb_last_sync', t);
+          document.getElementById('lastSyncTime').textContent = t;
+          document.getElementById('lastSyncInfo').style.display = 'block';
+          document.getElementById('configStatusBadge').className = 'config-status-badge connected';
+          document.getElementById('configStatusBadge').innerHTML = '✅ 已连接';
+        }, function() {
+          updateSyncIndicator('offline', '读取失败');
+        });
+
+        // Handle disconnect
+        ref.onDisconnect().set(getCheckinsLocal());
+
+        // Push current local data to cloud
+        pushUserDataToCloud();
+        updateSyncIndicator('syncing', '同步中...');
+
+      } catch (e) {
+        console.warn('Firebase init error:', e);
+        updateSyncIndicator('offline', '连接失败');
+      }
+    }
+
+    function pushUserDataToCloud() {
+      if (!db || !currentUserId) return;
+      db.ref('users/' + currentUserId + '/checkins').set(getCheckinsLocal()).then(() => {
+        updateSyncIndicator('synced', '已同步');
+      }).catch(() => {
+        updateSyncIndicator('offline', '同步失败');
+      });
+    }
 
     // ===== Firebase Config UI =====
     function openFirebaseConfig() {
       document.getElementById('firebaseConfig').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function getFirebaseConfig() {
-      try {
-        const saved = localStorage.getItem('fb_config');
-        return saved ? JSON.parse(saved) : null;
-      } catch { return null; }
     }
 
     function saveFirebaseConfig() {
@@ -1817,26 +2246,21 @@
 
       const config = { apiKey, authDomain, databaseURL, appId };
       localStorage.setItem('fb_config', JSON.stringify(config));
-      showConfigMessage('✅ 配置已保存，正在连接...', 'var(--green)');
+      showConfigMessage('✅ 配置已保存，正在重新连接...', 'var(--green)');
 
-      // Re-init Firebase with new config
-      initFirebase(config, true);
+      // Reload to re-init Firebase with new config
+      setTimeout(() => { location.reload(); }, 1500);
     }
 
     function clearFirebaseConfig() {
       localStorage.removeItem('fb_config');
-      document.getElementById('fbApiKey').value = '';
-      document.getElementById('fbAuthDomain').value = '';
-      document.getElementById('fbDatabaseURL').value = '';
-      document.getElementById('fbAppId').value = '';
+      ['fbApiKey','fbAuthDomain','fbDatabaseURL','fbAppId'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
       document.getElementById('configStatusBadge').className = 'config-status-badge not-configured';
       document.getElementById('configStatusBadge').innerHTML = '⚠️ 未配置';
       document.getElementById('lastSyncInfo').style.display = 'none';
-      showConfigMessage('已清除 Firebase 配置', 'var(--text-muted)');
-      if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
-      if (firebaseApp) { firebaseApp.delete ? firebaseApp.delete() : null; }
-      firebaseApp = null; db = null; fbConnected = false;
-      updateSyncIndicator('offline', '未连接');
+      showConfigMessage('已清除配置', 'var(--text-muted)');
     }
 
     function showConfigMessage(msg, color) {
@@ -1847,7 +2271,7 @@
 
     function loadConfigFields() {
       const cfg = getFirebaseConfig();
-      if (cfg) {
+      if (cfg.apiKey) {
         document.getElementById('fbApiKey').value = cfg.apiKey || '';
         document.getElementById('fbAuthDomain').value = cfg.authDomain || '';
         document.getElementById('fbDatabaseURL').value = cfg.databaseURL || '';
@@ -1855,84 +2279,12 @@
       }
     }
 
-    // ===== Firebase Init =====
-    function initFirebase(config, reconnect) {
-      try {
-        if (!firebase.apps.length || reconnect) {
-          if (firebase.apps.length) { firebase.apps.forEach(a => a.delete && a.delete()); }
-          firebaseApp = firebase.initializeApp(config);
-          db = firebase.database(firebaseApp);
-          fbConnected = true;
-
-          // Listen for real-time updates
-          const ref = db.ref(FB_PATH);
-          ref.on('value', function(snapshot) {
-            if (snapshot.exists()) {
-              const cloudData = snapshot.val();
-              // Merge: cloud data takes priority, keep local if cloud doesn't have it
-              const localData = getCheckinsLocal();
-              const merged = { ...localData, ...cloudData };
-              saveCheckinsLocal(merged);
-              // Update UI
-              renderCheckin();
-              updateRing();
-              updateStreak();
-              updateWeekly();
-              updateGoalBars();
-              // Update last sync time
-              const now = new Date();
-              const timeStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-              localStorage.setItem('fb_last_sync', timeStr);
-              document.getElementById('lastSyncTime').textContent = timeStr;
-              document.getElementById('lastSyncInfo').style.display = 'block';
-            }
-            updateSyncIndicator('synced', '已同步');
-            isSyncing = false;
-          }, function(error) {
-            console.warn('Firebase read error:', error);
-            updateSyncIndicator('offline', '读取失败');
-          });
-
-          // Handle disconnect: write local data when reconnecting
-          ref.onDisconnect().set(getCheckinsLocal());
-
-          // Update status badge
-          document.getElementById('configStatusBadge').className = 'config-status-badge connected';
-          document.getElementById('configStatusBadge').innerHTML = '✅ 已连接';
-          updateSyncIndicator('syncing', '同步中...');
-
-          // Push local data to cloud
-          pushToCloud();
-
-        }
-      } catch (e) {
-        console.error('Firebase init error:', e);
-        updateSyncIndicator('offline', '连接失败');
-        document.getElementById('configStatusBadge').className = 'config-status-badge not-configured';
-        document.getElementById('configStatusBadge').innerHTML = '❌ 连接失败';
-      }
-    }
-
     function updateSyncIndicator(status, text) {
       const indicator = document.getElementById('syncIndicator');
+      if (!indicator) return;
       const textEl = document.getElementById('syncText');
       indicator.className = 'sync-indicator ' + status;
       textEl.textContent = text;
-    }
-
-    function pushToCloud() {
-      if (!db || !fbConnected) return;
-      updateSyncIndicator('syncing', '同步中...');
-      db.ref(FB_PATH).set(getCheckinsLocal()).then(() => {
-        updateSyncIndicator('synced', '已同步');
-        const now = new Date();
-        const timeStr = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-        localStorage.setItem('fb_last_sync', timeStr);
-        document.getElementById('lastSyncTime').textContent = timeStr;
-        document.getElementById('lastSyncInfo').style.display = 'block';
-      }).catch(() => {
-        updateSyncIndicator('offline', '同步失败');
-      });
     }
 
     // ===== LocalStorage Helpers =====
@@ -1951,7 +2303,7 @@
       if (!all[dateStr]) all[dateStr] = {};
       all[dateStr][taskId] = done;
       saveCheckinsLocal(all);
-      pushToCloud(); // Push to cloud whenever data changes
+      pushUserDataToCloud();
     }
     function getDoneCount() {
       const today = getTodayData();
@@ -1997,6 +2349,7 @@
     function renderCheckin() {
       todaySnapshot = getTodayData();
       const container = document.getElementById('checkinTasks');
+      if (!container) return;
       container.innerHTML = '';
       TASKS.forEach(task => {
         const done = !!todaySnapshot[task.id];
@@ -2033,14 +2386,18 @@
       const pct = Math.round(done / total * 100);
       const circumference = 175.93;
       const offset = circumference * (1 - pct / 100);
-      document.getElementById('ringFill').style.strokeDashoffset = offset;
-      document.getElementById('ringLabel').textContent = pct + '%';
+      const el = document.getElementById('ringFill');
+      if (el) el.style.strokeDashoffset = offset;
+      const label = document.getElementById('ringLabel');
+      if (label) label.textContent = pct + '%';
     }
 
     function updateStreak() {
       const streak = calcStreak();
-      document.getElementById('streakNum').textContent = streak;
-      document.getElementById('streakSub').textContent =
+      const numEl = document.getElementById('streakNum');
+      if (numEl) numEl.textContent = streak;
+      const subEl = document.getElementById('streakSub');
+      if (subEl) subEl.textContent =
         streak === 0 ? '今天是第 1 天，加油！' :
         streak < 7 ? `已坚持 ${streak} 天，继续！` :
         streak < 30 ? `哇，${streak} 天连击！你在变强 🔥` :
@@ -2050,6 +2407,7 @@
     function updateWeekly() {
       const weekly = getWeeklyData();
       const container = document.getElementById('weeklyBars');
+      if (!container) return;
       container.innerHTML = '';
       weekly.forEach(({ day, pct }) => {
         const wrap = document.createElement('div');
@@ -2069,36 +2427,28 @@
       const bar1 = Math.min(100, Math.round(TASKS.filter(t=>todaySnapshot[t.id]).length / TASKS.length * 100));
       const bar2 = Math.min(100, Math.round(streak / 14 * 100));
       const bar3 = Math.min(100, Math.round(streak / 30 * 100));
-      document.getElementById('goalBar1').style.width = bar1 + '%';
-      document.getElementById('goalBar2').style.width = bar2 + '%';
-      document.getElementById('goalBar3').style.width = bar3 + '%';
+      ['goalBar1','goalBar2','goalBar3'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.style.width = [bar1,bar2,bar3][i] + '%';
+      });
     }
 
     function updateTip() {
       const tipIdx = now.getDate() % TIPS.length;
-      document.getElementById('dailyTip').textContent = TIPS[tipIdx];
+      const el = document.getElementById('dailyTip');
+      if (el) el.textContent = TIPS[tipIdx];
     }
 
     // ===== Scroll Fade-in =====
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
+        if (entry.isIntersecting) entry.target.classList.add('visible');
       });
     }, { threshold: 0.08, rootMargin: '0px 0px -50px 0px' });
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
     // ===== Init =====
     loadConfigFields();
-    const savedConfig = getFirebaseConfig();
-    if (savedConfig) {
-      // Auto-connect if config exists
-      document.getElementById('configStatusBadge').className = 'config-status-badge connected';
-      document.getElementById('configStatusBadge').innerHTML = '🔄 连接中...';
-      updateSyncIndicator('syncing', '连接中...');
-      setTimeout(() => { initFirebase(savedConfig, false); }, 500);
-    }
     renderCheckin();
     updateRing();
     updateStreak();
